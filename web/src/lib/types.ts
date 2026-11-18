@@ -844,6 +844,8 @@ export interface ModelTokenStat {
   output_tokens: number;
   cache_read_tokens: number;
   cache_write_tokens: number;
+  cost_usd: number; // estimated spend for this model (see db/pricing.go)
+  cost_known: boolean; // false when the model is not in the price table
 }
 
 export interface Session {

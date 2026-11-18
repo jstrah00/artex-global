@@ -600,7 +600,10 @@
         "colModel": "Model",
         "colCalls": "Calls",
         "colHitRate": "Hit rate",
-        "empty": "No LLM usage (the task hasn't made any calls yet, or records are still being written)."
+        "empty": "No LLM usage (the task hasn't made any calls yet, or records are still being written).",
+        "colCost": "Cost",
+        "totalCost": "Est. cost",
+        "costUnknown": "price n/a"
       },
       "scope": {
         "title": "Test scope",

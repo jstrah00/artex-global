@@ -102,6 +102,7 @@ ORDER BY SUM(input_tokens) + SUM(output_tokens) DESC, model`, taskID)
 			&m.CacheReadTokens, &m.CacheWriteTokens); err != nil {
 			return nil, err
 		}
+		m.CostUSD, m.CostKnown = costUSD(m.Model, m.InputTokens, m.OutputTokens, m.CacheReadTokens, m.CacheWriteTokens)
 		out = append(out, m)
 	}
 	return out, rows.Err()

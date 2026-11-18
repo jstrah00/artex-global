@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"unicode"
 )
 
 // TestWorkspaceErrorConstantsLocalized guards F3b (workspace.go): every user-facing
@@ -23,10 +24,17 @@ func TestWorkspaceErrorConstantsLocalized(t *testing.T) {
 		"targetIsDir":      errWsTargetIsDir,
 		"cannotDeleteRoot": errWsCannotDeleteRoot,
 		"uploadDirMissing": errWsUploadDirMissing,
-		"uploadParse":      errWsUploadParse,
 		"noUploadFile":     errWsNoUploadFile,
 	} {
 		assertKoreanError(t, label, msg)
+	}
+
+	// errWsUploadParse bypasses the translation catalog and was translated to English.
+	for _, r := range errWsUploadParse {
+		if unicode.Is(unicode.Han, r) || unicode.Is(unicode.Hangul, r) {
+			t.Errorf("uploadParse: CJK characters remain (expected English): %q", errWsUploadParse)
+			break
+		}
 	}
 }
 

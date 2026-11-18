@@ -600,7 +600,10 @@
         "colModel": "모델",
         "colCalls": "호출",
         "colHitRate": "적중률",
-        "empty": "LLM 사용량이 없습니다(작업이 아직 호출을 생성하지 않았거나, 기록을 쓰는 중입니다)."
+        "empty": "LLM 사용량이 없습니다(작업이 아직 호출을 생성하지 않았거나, 기록을 쓰는 중입니다).",
+        "colCost": "비용",
+        "totalCost": "예상 비용",
+        "costUnknown": "가격 미정"
       },
       "scope": {
         "title": "테스트 범위",

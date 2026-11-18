@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"unicode"
 )
 
 // task_archive_package.go 의 보관 패키지 삭제 준비 오류 문구를 한국어로 유지하는 회귀 방어
@@ -39,5 +40,10 @@ func TestTaskArchiveStagedAndOriginalCoexistErrorLocalized(t *testing.T) {
 	if moved {
 		t.Fatal("공존 모순 상태에서는 moved 가 true 가 되어서는 안 됩니다")
 	}
-	assertKoreanError(t, "staged_and_original_coexist", err.Error())
+	for _, r := range err.Error() {
+		if unicode.Is(unicode.Han, r) || unicode.Is(unicode.Hangul, r) {
+			t.Errorf("staged_and_original_coexist: CJK characters remain (expected English): %q", err.Error())
+			break
+		}
+	}
 }

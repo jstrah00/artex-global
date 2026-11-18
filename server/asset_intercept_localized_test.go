@@ -1,6 +1,21 @@
 package server
 
-import "testing"
+import (
+	"testing"
+	"unicode"
+)
+
+// assetInterceptHasCJK reports whether s still contains Chinese Han or Korean
+// Hangul. errTaskInterceptInvalidAction bypasses the translation catalog and was
+// translated to English in the second localization pass.
+func assetInterceptHasCJK(s string) bool {
+	for _, r := range s {
+		if unicode.Is(unicode.Han, r) || unicode.Is(unicode.Hangul, r) {
+			return true
+		}
+	}
+	return false
+}
 
 // asset_intercept.go·task_intercept.go 의 가로채기 규칙 검증기가 돌려주는 사용자 노출
 // 오류 문구를 한국어로 유지하는 회귀 방어 테스트다. 두 검증기
@@ -16,9 +31,13 @@ func TestAssetInterceptErrorsLocalized(t *testing.T) {
 		{"bad_exact_ip", errAssetInterceptInvalidExactIPFmt},
 		{"bad_cidr", errAssetInterceptInvalidCIDRFmt},
 		{"bad_kind", errAssetInterceptInvalidKindFmt},
-		{"bad_action", errTaskInterceptInvalidAction},
 	} {
 		assertKoreanError(t, c.label, c.msg)
+	}
+
+	// errTaskInterceptInvalidAction bypasses the catalog and is now English.
+	if assetInterceptHasCJK(errTaskInterceptInvalidAction) {
+		t.Errorf("bad_action: CJK characters remain (expected English): %q", errTaskInterceptInvalidAction)
 	}
 
 	// 실제 경로: validateAssetInterceptRuleReq 의 네 거부 분기
@@ -49,8 +68,8 @@ func TestAssetInterceptErrorsLocalized(t *testing.T) {
 	badAction := taskInterceptRuleReq{Action: "nope", Kind: "exact_domain", Pattern: "example.com"}
 	if err := validateTaskInterceptRuleReq(&badAction); err == nil {
 		t.Fatalf("bad_action_path: 오류가 없습니다(검증을 통과함)")
-	} else {
-		assertKoreanError(t, "bad_action_path", err.Error())
+	} else if assetInterceptHasCJK(err.Error()) {
+		t.Errorf("bad_action_path: CJK characters remain (expected English): %q", err.Error())
 	}
 
 	// action 공란은 block 기본값으로 정규화되어 통과한다

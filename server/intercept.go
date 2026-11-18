@@ -334,12 +334,12 @@ func interceptFilterParams(q url.Values) (db.InterceptApprovalFilter, error) {
 	switch filter.Status {
 	case "", "pending", "allowed", "denied", "timeout":
 	default:
-		return filter, fmt.Errorf("status 값은 pending, allowed, denied, timeout 중 하나여야 합니다")
+		return filter, fmt.Errorf("status must be one of pending, allowed, denied, timeout")
 	}
 	switch filter.DecisionSource {
 	case "", "model", "rule", "unknown":
 	default:
-		return filter, fmt.Errorf("decision_source 값은 model, rule, unknown 중 하나여야 합니다")
+		return filter, fmt.Errorf("decision_source must be one of model, rule, unknown")
 	}
 	return filter, nil
 }
@@ -489,29 +489,29 @@ type interceptRuleReq struct {
 
 func validateInterceptRuleReq(req interceptRuleReq) error {
 	if req.Name == "" {
-		return fmt.Errorf("name 값은 비워 둘 수 없습니다")
+		return fmt.Errorf("name cannot be empty")
 	}
 	switch req.MatchTarget {
 	case "tool_name", "tool_input":
 	default:
-		return fmt.Errorf("match_target 값은 tool_name 또는 tool_input 중 하나여야 합니다")
+		return fmt.Errorf("match_target must be one of tool_name or tool_input")
 	}
 	switch req.MatchType {
 	case "string", "regex":
 	default:
-		return fmt.Errorf("match_type 값은 string 또는 regex 중 하나여야 합니다")
+		return fmt.Errorf("match_type must be one of string or regex")
 	}
 	if req.Pattern == "" {
-		return fmt.Errorf("pattern 값은 비워 둘 수 없습니다")
+		return fmt.Errorf("pattern cannot be empty")
 	}
 	switch req.Action {
 	case "allow", "deny", "ask":
 	default:
-		return fmt.Errorf("action 값은 allow, deny, ask 중 하나여야 합니다")
+		return fmt.Errorf("action must be one of allow, deny, ask")
 	}
 	if req.MatchType == "regex" {
 		if _, err := regexp.Compile(req.Pattern); err != nil {
-			return fmt.Errorf("pattern 값이 올바른 정규식이 아닙니다: %w", err)
+			return fmt.Errorf("pattern is not a valid regular expression: %w", err)
 		}
 	}
 	return nil

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 	"testing"
+	"unicode"
 )
 
 // engine.go·engine_timeout.go·goals.go 의 "표시 전용" 런타임 활동 요약 상수를 한국어로
@@ -16,6 +17,15 @@ import (
 // 포함·중국어 한자 0, intercept_archive_localized_test.go)를 재사용한다. [[G132]]
 func TestRuntimeActivitySummariesLocalized(t *testing.T) {
 	// 포맷 인자 없는 고정 요약: 그대로 한국어여야 한다.
+	hasCJK := func(s string) bool {
+		for _, r := range s {
+			if unicode.Is(unicode.Han, r) || unicode.Is(unicode.Hangul, r) {
+				return true
+			}
+		}
+		return false
+	}
+
 	plain := map[string]string{
 		"goalless_task_done": goallessTaskDoneSummary,
 		"goal_breakdown_r0":  goalBreakdownRound0Summary,
@@ -23,7 +33,9 @@ func TestRuntimeActivitySummariesLocalized(t *testing.T) {
 		"queued_fifo":        queuedFIFOSummary,
 	}
 	for label, msg := range plain {
-		assertKoreanError(t, label, msg)
+		if hasCJK(msg) {
+			t.Errorf("%s: CJK characters remain (expected English): %q", label, msg)
+		}
 	}
 
 	// %d 포맷 문자열: 포맷 인자가 살아 있고, 포맷한 결과도 한국어이며 숫자가 실제로
@@ -38,7 +50,9 @@ func TestRuntimeActivitySummariesLocalized(t *testing.T) {
 			t.Fatalf("%s: 포맷 인자 %%d 가 사라졌습니다: %q", label, f)
 		}
 		got := fmt.Sprintf(f, 7)
-		assertKoreanError(t, label, got)
+		if hasCJK(got) {
+			t.Errorf("%s: CJK characters remain (expected English): %q", label, got)
+		}
 		if !strings.Contains(got, "7") {
 			t.Fatalf("%s: 포맷 인자가 결과에 반영되지 않았습니다: %q", label, got)
 		}

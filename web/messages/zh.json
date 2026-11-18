@@ -600,7 +600,10 @@
         "colModel": "模型",
         "colCalls": "调用",
         "colHitRate": "命中率",
-        "empty": "暂无 LLM 用量（任务尚未产生调用，或记录仍在写入）。"
+        "empty": "暂无 LLM 用量（任务尚未产生调用，或记录仍在写入）。",
+        "colCost": "费用",
+        "totalCost": "预估费用",
+        "costUnknown": "价格未知"
       },
       "scope": {
         "title": "测试范围",

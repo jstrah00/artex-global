@@ -600,7 +600,10 @@
         "colModel": "Modelo",
         "colCalls": "Llamadas",
         "colHitRate": "Tasa de aciertos",
-        "empty": "No hay uso del LLM (la tarea aún no ha realizado llamadas o los registros se están escribiendo)."
+        "empty": "No hay uso del LLM (la tarea aún no ha realizado llamadas o los registros se están escribiendo).",
+        "colCost": "Costo",
+        "totalCost": "Costo est.",
+        "costUnknown": "precio n/d"
       },
       "scope": {
         "title": "Alcance de prueba",

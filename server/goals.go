@@ -39,10 +39,10 @@ type goalSpec struct {
 // 초기 목표 분해 라운드와 동시 실행 대기열 상태 안내다. 한국어화해도 두뇌 입력
 // (BRIEF 경계 #1)을 건드리지 않는다. 포맷 인자(%d)는 원형 보존. [[G132]]
 const (
-	goalBreakdownRound0Summary       = "0차 목표 분해"
-	queuedConcurrencyLimitSummaryFmt = "대기열 등록: 동시 실행 상한 %d개에 도달해, 빈자리가 나면 자동으로 시작합니다"
-	queuedNoLLMSummary               = "대기열 등록: 현재 실행 가능한 LLM 설정이 없어, 설정이 복구되면 자동으로 시작합니다"
-	queuedFIFOSummary                = "대기열 등록: 먼저 대기 중인 작업이 있어, FIFO 순서대로 자동으로 시작합니다"
+	goalBreakdownRound0Summary       = "Goal breakdown round 0"
+	queuedConcurrencyLimitSummaryFmt = "Queued: the concurrency limit of %d has been reached; it will start automatically when a slot frees up"
+	queuedNoLLMSummary               = "Queued: no runnable LLM configuration is currently available; it will start automatically once a configuration is restored"
+	queuedFIFOSummary                = "Queued: earlier tasks are waiting; it will start automatically in FIFO order"
 )
 
 func (s *Server) launchTask(t *Task, seedText string, seedFirstIntent bool) {
@@ -197,8 +197,8 @@ func (s *Server) admitTaskWhen(t *Task, mode string, requirePaused bool) (queued
 	// this ordering, its already-running worker loops can claim the newly-opened
 	// intent in the gap between status=running and queued=true.
 	if shouldQueue || wasTerminal || wasPaused || wasQueued {
-		s.engine.Pause(t.ID, agent.Causef("queued_for_admission", "任务等待运行准入",
-			"任务正在等待并发队列或准入状态提交，本次执行已停止；只有获得运行槽后才会重新领取意图"))
+		s.engine.Pause(t.ID, agent.Causef("queued_for_admission", "Task waiting for run admission",
+			"The task is waiting for the concurrency queue or for admission state to be committed; this execution has stopped, and intents will only be claimed again after a run slot is obtained"))
 	}
 
 	status := lifecycle.Status
@@ -286,8 +286,8 @@ func (s *Server) reconcileConcurrency() {
 				continue
 			}
 			mode := s.resumeAdmissionMode(task)
-			s.engine.Pause(task.ID, agent.Causef("llm_unavailable_queued", "LLM 不可用，任务进入等待队列",
-				"任务当前无法解析可运行的 Planner/Worker LLM，已释放并发槽；配置恢复后按队列顺序继续"))
+			s.engine.Pause(task.ID, agent.Causef("llm_unavailable_queued", "LLM unavailable, task moved to the waiting queue",
+				"The task currently cannot resolve a runnable Planner/Worker LLM; its concurrency slot has been released and it will continue in queue order once the configuration is restored"))
 			if err := s.m.EnqueueTask(task.ID, mode); err != nil {
 				s.engine.Resume(task)
 				log.Printf("[concurrency] task %s failed to enqueue because LLM is unavailable: %v", task.ID, err)

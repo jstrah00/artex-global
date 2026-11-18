@@ -39,6 +39,21 @@ func assertKorean(t *testing.T, label, s string) {
 	}
 }
 
+// assertEnglish fails if s is empty or still carries Hangul or Han. Reverting a
+// localized message back to Korean or Chinese trips it, so the test is not vacuous.
+func assertEnglish(t *testing.T, label, s string) {
+	t.Helper()
+	if s == "" {
+		t.Errorf("%s: empty string", label)
+	}
+	if hasHangul(s) {
+		t.Errorf("%s: Hangul remains: %q", label, s)
+	}
+	if hasHan(s) {
+		t.Errorf("%s: Han remains: %q", label, s)
+	}
+}
+
 // TestInterceptMessagesLocalized pins the user-facing judge/approval messages to
 // Korean. These surface in the approval record reason, the activity stream, and
 // the 409 response for an already-decided request.
@@ -54,7 +69,7 @@ func TestInterceptMessagesLocalized(t *testing.T) {
 		{"reasonManualAllow", reasonManualAllow},
 		{"ErrAlreadyDecided", ErrAlreadyDecided.Error()},
 	} {
-		assertKorean(t, c.name, c.s)
+		assertEnglish(t, c.name, c.s)
 	}
 }
 
@@ -75,7 +90,7 @@ func TestJudgeActionLabelLocalized(t *testing.T) {
 func TestDefaultMessageLocalized(t *testing.T) {
 	for _, action := range []string{"deny", "ask"} {
 		msg := defaultMessage(action, "R1")
-		assertKorean(t, "defaultMessage("+action+")", msg)
+		assertEnglish(t, "defaultMessage("+action+")", msg)
 		if !strings.Contains(msg, "R1") {
 			t.Errorf("defaultMessage(%s) dropped rule name: %q", action, msg)
 		}
@@ -90,11 +105,11 @@ func TestDefaultMessageLocalized(t *testing.T) {
 // the tool name via /도구\s+(\S+)\s+승인/.
 func TestToolApprovalSummaryLocalized(t *testing.T) {
 	s := fmt.Sprintf(msgToolApprovalRequestFmt, "Bash", 42)
-	assertKorean(t, "msgToolApprovalRequestFmt", s)
+	assertEnglish(t, "msgToolApprovalRequestFmt", s)
 	if !strings.Contains(s, "(#42)") {
 		t.Errorf("summary lost the (#N) marker (transcript.tsx pending_id regex): %q", s)
 	}
-	if !strings.Contains(s, "도구 Bash 승인") {
-		t.Errorf("summary lost the '도구 X 승인' shape (transcript.tsx toolName regex): %q", s)
+	if !strings.Contains(s, "Tool Bash approval") {
+		t.Errorf("summary lost the 'Tool X approval' shape (transcript.tsx toolName regex): %q", s)
 	}
 }

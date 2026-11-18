@@ -6,7 +6,21 @@ import (
 	"fmt"
 	"strings"
 	"testing"
+	"unicode"
 )
+
+// assertSyncNoCJK fails if s still contains Chinese Han or Korean Hangul. Used for
+// the warn* constants that bypass the translation catalog and were translated to
+// English in the second localization pass.
+func assertSyncNoCJK(t *testing.T, label, s string) {
+	t.Helper()
+	for _, r := range s {
+		if unicode.Is(unicode.Han, r) || unicode.Is(unicode.Hangul, r) {
+			t.Errorf("%s: CJK characters remain (expected English): %q", label, s)
+			return
+		}
+	}
+}
 
 // TestSyncScopeSentryConstantsLocalized guards F3b (sync_scopesentry.go): every
 // user-facing message constant — surfaced either as a writeErr HTTP body or inside
@@ -25,17 +39,27 @@ func TestSyncScopeSentryConstantsLocalized(t *testing.T) {
 		{"errSSParseTasksPrefix", errSSParseTasksPrefix},
 		{"errSSDimension", errSSDimension},
 		{"errSSTargetsEmpty", errSSTargetsEmpty},
-		{"warnSSProjectMetaFmt", warnSSProjectMetaFmt},
-		{"warnSSCompanyCreateFmt", warnSSCompanyCreateFmt},
-		{"warnSSUnknownAssetPrefix", warnSSUnknownAssetPrefix},
 		{"errSSFetchFmt", errSSFetchFmt},
-		{"warnSSTruncatedFmt", warnSSTruncatedFmt},
 		{"errSSParseSubdomainPrefix", errSSParseSubdomainPrefix},
 		{"errSSParseAppPrefix", errSSParseAppPrefix},
 		{"errSSParseServicePrefix", errSSParseServicePrefix},
 	}
 	for _, c := range cases {
 		assertKoreanError(t, c.label, c.msg)
+	}
+
+	// warn* constants bypass the translation catalog and were translated to English.
+	englishCases := []struct {
+		label string
+		msg   string
+	}{
+		{"warnSSProjectMetaFmt", warnSSProjectMetaFmt},
+		{"warnSSCompanyCreateFmt", warnSSCompanyCreateFmt},
+		{"warnSSUnknownAssetPrefix", warnSSUnknownAssetPrefix},
+		{"warnSSTruncatedFmt", warnSSTruncatedFmt},
+	}
+	for _, c := range englishCases {
+		assertSyncNoCJK(t, c.label, c.msg)
 	}
 
 	// dimension/targets validation keep their JSON field names and enum values.
@@ -61,13 +85,13 @@ func TestSyncScopeSentryFormattedLocalized(t *testing.T) {
 	}
 
 	meta := fmt.Sprintf(warnSSProjectMetaFmt, "proj-1", errors.New("boom"))
-	assertKoreanError(t, "warnSSProjectMetaFmt", meta)
+	assertSyncNoCJK(t, "warnSSProjectMetaFmt", meta)
 	if !strings.Contains(meta, "proj-1") || !strings.Contains(meta, "boom") {
 		t.Fatalf("프로젝트/원본 오류가 치환되지 않았습니다: %q", meta)
 	}
 
 	company := fmt.Sprintf(warnSSCompanyCreateFmt, "ACME", errors.New("boom"))
-	assertKoreanError(t, "warnSSCompanyCreateFmt", company)
+	assertSyncNoCJK(t, "warnSSCompanyCreateFmt", company)
 	if !strings.Contains(company, "ACME") {
 		t.Fatalf("회사 이름이 치환되지 않았습니다: %q", company)
 	}
@@ -79,7 +103,7 @@ func TestSyncScopeSentryFormattedLocalized(t *testing.T) {
 	}
 
 	truncated := fmt.Sprintf(warnSSTruncatedFmt, "app", "t1", syncMaxPerType)
-	assertKoreanError(t, "warnSSTruncatedFmt", truncated)
+	assertSyncNoCJK(t, "warnSSTruncatedFmt", truncated)
 	if !strings.Contains(truncated, "5000") {
 		t.Fatalf("상한 건수가 치환되지 않았습니다: %q", truncated)
 	}

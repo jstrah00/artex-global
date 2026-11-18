@@ -7,25 +7,21 @@ import (
 	"unicode"
 )
 
-// assertKorean fails if msg is empty, carries a CJK Han ideograph (= leftover
-// untranslated Chinese), or has no Hangul at all. ASCII field names and the
-// "1–4000"-style ranges are fine; only Han marks an unlocalized string.
-func assertKorean(t *testing.T, label, msg string) {
+// assertEnglish fails if msg is empty or carries a CJK Han ideograph (= leftover
+// untranslated Chinese) or a Hangul syllable (= leftover untranslated Korean).
+// Reverting a message back to Korean or Chinese trips it, so it is not vacuous.
+func assertEnglish(t *testing.T, label, msg string) {
 	t.Helper()
 	if msg == "" {
-		t.Fatalf("%s: 빈 메시지", label)
+		t.Fatalf("%s: empty message", label)
 	}
-	hangul := false
 	for _, r := range msg {
 		if unicode.Is(unicode.Han, r) {
-			t.Fatalf("%s: 중국어 한자가 남아 있습니다: %q", label, msg)
+			t.Fatalf("%s: Chinese Han remains: %q", label, msg)
 		}
 		if unicode.Is(unicode.Hangul, r) {
-			hangul = true
+			t.Fatalf("%s: Korean Hangul remains: %q", label, msg)
 		}
-	}
-	if !hangul {
-		t.Fatalf("%s: 한글이 없습니다: %q", label, msg)
 	}
 }
 
@@ -34,16 +30,16 @@ func assertKorean(t *testing.T, label, msg string) {
 // These surface through /api/.../side-questions into the chat 곁질문 panel, so a
 // revert to Chinese here is a user-visible regression and must fail the build.
 func TestSideQuestionOutputsLocalized(t *testing.T) {
-	assertKorean(t, "ErrContextBudget", ErrContextBudget.Error())
-	assertKorean(t, "errSideModelInterrupted", errSideModelInterrupted.Error())
-	assertKorean(t, "errSideNoAnswer", errSideNoAnswer.Error())
-	assertKorean(t, "msgSideToolUnavailable", msgSideToolUnavailable)
-	assertKorean(t, "errSideSummaryCallCap", errSideSummaryCallCap.Error())
-	assertKorean(t, "sideSummaryFailedPrefix", sideSummaryFailedPrefix)
-	assertKorean(t, "errSideSummaryIncomplete", errSideSummaryIncomplete.Error())
-	assertKorean(t, "errSideSummaryOverBudget", errSideSummaryOverBudget.Error())
-	assertKorean(t, "errSideHistoryCursor", errSideHistoryCursor.Error())
-	assertKorean(t, "errSideCompactionStalled", errSideCompactionStalled.Error())
+	assertEnglish(t, "ErrContextBudget", ErrContextBudget.Error())
+	assertEnglish(t, "errSideModelInterrupted", errSideModelInterrupted.Error())
+	assertEnglish(t, "errSideNoAnswer", errSideNoAnswer.Error())
+	assertEnglish(t, "msgSideToolUnavailable", msgSideToolUnavailable)
+	assertEnglish(t, "errSideSummaryCallCap", errSideSummaryCallCap.Error())
+	assertEnglish(t, "sideSummaryFailedPrefix", sideSummaryFailedPrefix)
+	assertEnglish(t, "errSideSummaryIncomplete", errSideSummaryIncomplete.Error())
+	assertEnglish(t, "errSideSummaryOverBudget", errSideSummaryOverBudget.Error())
+	assertEnglish(t, "errSideHistoryCursor", errSideHistoryCursor.Error())
+	assertEnglish(t, "errSideCompactionStalled", errSideCompactionStalled.Error())
 }
 
 // TestSideQuestionBudgetSentinelPreserved: localizing the message must not break
@@ -64,15 +60,11 @@ func TestSideQuestionBrainPreserved(t *testing.T) {
 		{"instruction", instruction},
 		{"summaryInstruction", summaryInstruction},
 	} {
-		han := false
 		for _, r := range c.text {
 			if unicode.Is(unicode.Han, r) {
-				han = true
+				t.Errorf("%s: brain prompt must be English, found Han character %q", c.label, r)
 				break
 			}
-		}
-		if !han {
-			t.Errorf("%s: 두뇌 프롬프트가 더 이상 중국어가 아닙니다(벤치마크 드리프트 위험)", c.label)
 		}
 	}
 }

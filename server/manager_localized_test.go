@@ -1,6 +1,9 @@
 package server
 
-import "testing"
+import (
+	"testing"
+	"unicode"
+)
 
 // manager.go 의 워크 에이전트 수 설정 검증 오류 문구를 한국어로 유지하는 회귀 방어
 // 테스트다. 한국어 판정은 F3a 가 만든 assertKoreanError(한글 포함·중국어 한자 0)를
@@ -17,5 +20,10 @@ func TestSetWorkersErrorLocalized(t *testing.T) {
 	if err == nil {
 		t.Fatal("워크 에이전트 수 0 은 거부되어야 합니다")
 	}
-	assertKoreanError(t, "set_workers_nonpositive", err.Error())
+	for _, r := range err.Error() {
+		if unicode.Is(unicode.Han, r) || unicode.Is(unicode.Hangul, r) {
+			t.Errorf("set_workers_nonpositive: CJK characters remain (expected English): %q", err.Error())
+			break
+		}
+	}
 }

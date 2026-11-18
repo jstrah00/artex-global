@@ -34,7 +34,7 @@ const (
 	errWsTargetIsDir      = "대상 경로가 디렉터리입니다"
 	errWsCannotDeleteRoot = "작업 공간 루트 디렉터리는 삭제할 수 없습니다"
 	errWsUploadDirMissing = "대상 디렉터리가 존재하지 않습니다"
-	errWsUploadParse      = "업로드 처리에 실패했거나 크기 제한을 초과했습니다: " // 뒤에 err.Error() 를 이어 붙인다
+	errWsUploadParse      = "upload failed or exceeded the size limit: " // 뒤에 err.Error() 를 이어 붙인다
 	errWsNoUploadFile     = "업로드할 파일이 없습니다(폼 필드 file)"
 )
 

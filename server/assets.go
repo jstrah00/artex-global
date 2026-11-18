@@ -30,8 +30,8 @@ const (
 // 두어 같은 패널에서 출처 라벨이 언어별로 어긋나지 않게 한다(db.manualTaskScopeSummary
 // 도 같은 성격의 수동 추가 라벨). 비교·분기에 쓰이지 않는 표시 전용 값이다.
 const (
-	taskAssetSourceAPISummary  = "자산 API 로 등록"
-	taskAssetSourceTaskSummary = "작업 설명 또는 목표로 초기화"
+	taskAssetSourceAPISummary  = "Registered via the asset API"
+	taskAssetSourceTaskSummary = "Initialized from the task description or goal"
 )
 
 func decodeCompanyMutationRequest(w http.ResponseWriter, r *http.Request, value any) bool {

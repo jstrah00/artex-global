@@ -50,6 +50,11 @@ function fmtTokens(n: number): string {
   return String(n);
 }
 
+function fmtUSD(n: number): string {
+  if (n > 0 && n < 0.01) return "<$0.01";
+  return "$" + n.toFixed(n >= 100 ? 0 : 2);
+}
+
 // 캐시 적중률 = 캐시 읽기 / 입력(InputTokens 는 cache_read 부분집합을 이미 포함하므로 비율은 0~100%).
 function cacheHitRate(cacheRead: number, input: number): string {
   if (input <= 0) return "—";
@@ -412,9 +417,11 @@ export function OverviewTab({ taskId }: { taskId: string }) {
       acc.cacheRead += m.cache_read_tokens;
       acc.cacheWrite += m.cache_write_tokens;
       acc.calls += m.calls;
+      acc.cost += m.cost_usd;
+      acc.costPartial = acc.costPartial || !m.cost_known;
       return acc;
     },
-    { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, calls: 0 },
+    { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, calls: 0, cost: 0, costPartial: false },
   );
 
   return (
@@ -753,6 +760,16 @@ export function OverviewTab({ taskId }: { taskId: string }) {
                     {cacheHitRate(tokenTotals.cacheRead, tokenTotals.input)}
                   </span>
                 </span>
+                <span
+                  className="tabular-nums"
+                  title={tokenTotals.costPartial ? t("tokens.costUnknown") : undefined}
+                >
+                  <span className="text-muted-foreground">{t("tokens.totalCost")} </span>
+                  <span className="font-semibold text-amber-500">
+                    {fmtUSD(tokenTotals.cost)}
+                    {tokenTotals.costPartial ? "+" : ""}
+                  </span>
+                </span>
               </div>
               {/* 모델별 명세표 */}
               <div className="overflow-x-auto">
@@ -764,7 +781,8 @@ export function OverviewTab({ taskId }: { taskId: string }) {
                       <th className="py-1.5 pr-3 text-right font-medium">{t("tokens.input")}</th>
                       <th className="py-1.5 pr-3 text-right font-medium">{t("tokens.output")}</th>
                       <th className="py-1.5 pr-3 text-right font-medium">{t("tokens.cacheRead")}</th>
-                      <th className="py-1.5 text-right font-medium">{t("tokens.colHitRate")}</th>
+                      <th className="py-1.5 pr-3 text-right font-medium">{t("tokens.colHitRate")}</th>
+                      <th className="py-1.5 text-right font-medium">{t("tokens.colCost")}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -777,8 +795,14 @@ export function OverviewTab({ taskId }: { taskId: string }) {
                         <td className="py-1.5 pr-3 text-right tabular-nums">{fmtTokens(m.input_tokens)}</td>
                         <td className="py-1.5 pr-3 text-right tabular-nums">{fmtTokens(m.output_tokens)}</td>
                         <td className="py-1.5 pr-3 text-right tabular-nums">{fmtTokens(m.cache_read_tokens)}</td>
-                        <td className="py-1.5 text-right tabular-nums text-emerald-500">
+                        <td className="py-1.5 pr-3 text-right tabular-nums text-emerald-500">
                           {cacheHitRate(m.cache_read_tokens, m.input_tokens)}
+                        </td>
+                        <td
+                          className="py-1.5 text-right tabular-nums text-amber-500"
+                          title={m.cost_known ? undefined : t("tokens.costUnknown")}
+                        >
+                          {m.cost_known ? fmtUSD(m.cost_usd) : "—"}
                         </td>
                       </tr>
                     ))}

@@ -189,8 +189,8 @@ func TestUploadSkillUnsupportedMethod(t *testing.T) {
 		t.Fatalf("status = %d, want 400 (body %s)", rr.Code, rr.Body)
 	}
 	msg, _ := out["error"].(string)
-	if !strings.Contains(msg, "Deflate64") || !strings.Contains(msg, "지원하지 않는 압축 방식") {
-		t.Fatalf("error = %q, want a Korean message naming Deflate64", msg)
+	if !strings.Contains(msg, "Deflate64") || !strings.Contains(msg, "Unsupported compression method") {
+		t.Fatalf("error = %q, want a message naming Deflate64", msg)
 	}
 }
 

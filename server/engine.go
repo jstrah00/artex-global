@@ -33,7 +33,7 @@ func dropReason(err error) string {
 	if errors.As(err, &pgErr) {
 		switch pgErr.Code {
 		case "23503":
-			return "fk_violation(23503,父exploration不存在)"
+			return "fk_violation(23503,parent exploration does not exist)"
 		case "23505":
 			return "unique_violation(23505)"
 		default:
@@ -501,7 +501,7 @@ func transitionIntentState(store *db.ExplorationStore, intentID int64, expected,
 		// 이 CAS 충돌 오류는 runIntent(아래 989~1156) 안에서만 쓰이고 그 함수는 bool 을
 		// 반환한다. 오류는 log.Printf 로 남기거나 흐름 제어에만 쓰여 HTTP 응답·에이전트
 		// 도구(actool)로 나가지 않으므로, 로그 성격(Z2)이라 원문을 보존한다.
-		return fmt.Errorf("%w: 意图 %d 不再是 %s 状态", db.ErrIntentStateConflict, intentID, expected)
+		return fmt.Errorf("%w: intent %d is no longer in %s state", db.ErrIntentStateConflict, intentID, expected)
 	}
 	return nil
 }
@@ -514,13 +514,13 @@ func (e *Engine) SteerWork(intentID int64, msg string) error {
 	// 오류가 actool.Errorf(err.Error()) 로 에이전트에게 되돌아가는 두뇌 입력이다. 번역하면
 	// 벤치마크된 에이전트의 입력이 바뀌어 성능 드리프트 위험이 있어 원문을 보존한다.
 	if strings.TrimSpace(msg) == "" {
-		return fmt.Errorf("纠偏消息不能为空")
+		return fmt.Errorf("steering message must not be empty")
 	}
 	e.workMu.Lock()
 	running := e.work[intentID] != nil
 	e.workMu.Unlock()
 	if !running {
-		return fmt.Errorf("意图 %d 当前没有运行中的 work（可能已结束或未被领取）", intentID)
+		return fmt.Errorf("intent %d has no running work right now (it may have finished or not been claimed)", intentID)
 	}
 	e.steerMu.Lock()
 	e.steerBox[intentID] = append(e.steerBox[intentID], msg)
@@ -581,8 +581,8 @@ const defaultEmptyTurnNudges = 2
 // 的 SEThinkingDelta)，所以 thinking-only 不算空。何况那层是原样重发整个 prompt，
 // 对这种由上下文形状决定的空转，重发只会让模型再想一遍。这里换成追加一条指令，让它
 // 带着已经产出的思考继续，输入变了才有理由给出不同的行为。
-const emptyTurnNudge = "【空转提醒】你上一轮只输出了思考过程，既没有给出正文回复，也没有调用任何工具，" +
-	"这一轮等于没有产出。请直接执行你刚才想好的下一步：要么调用工具，要么给出结论文字。不要重复思考。"
+const emptyTurnNudge = "**Idle-turn reminder** Your last turn only produced reasoning: you gave no reply text and called no tools, " +
+	"so this turn produced nothing. Carry out the next step you just worked out right away: either call a tool or give your conclusion in text. Do not repeat the reasoning."
 
 // isThinkingOnlyTurn reports whether the latest assistant turn produced neither
 // text nor a tool call — i.e. the model spent the whole round thinking.
@@ -599,8 +599,8 @@ func isThinkingOnlyTurn(messages []llm.Message) bool {
 
 func (h steerHooks) PreToolUse(ctx context.Context, name string, input []byte) (bool, string, []byte) {
 	if msg, ok := h.drain(); ok {
-		return true, "【规划者实时纠偏】" + msg +
-			"\n（这是规划者对本意图的即时指令；本次工具调用未执行，请据此调整下一步。若与你当前打算冲突，以此为准。）", nil
+		return true, "**Real-time steering from the planner**" + msg +
+			"\n(This is an immediate instruction from the planner for this intent; this tool call was not executed, adjust your next step accordingly. If it conflicts with what you were about to do, this takes precedence.)", nil
 	}
 	if h.inner != nil {
 		return h.inner.PreToolUse(ctx, name, input)
@@ -651,7 +651,7 @@ func (e *Engine) KillWork(intentID int64) error {
 		// KillWork 는 planner 의 kill_work 도구(agent/tools.go)로 배선되어, 이 오류가
 		// actool.Errorf(err.Error()) 로 에이전트에게 되돌아가는 두뇌 입력이다. SteerWork 와
 		// 같은 이유로 원문을 보존한다.
-		return fmt.Errorf("意图 %d 当前没有运行中的 work（可能已结束或未被领取）", intentID)
+		return fmt.Errorf("intent %d has no running work right now (it may have finished or not been claimed)", intentID)
 	}
 	run.cancel(agent.AbortKilledByPlanner)
 	return nil
@@ -668,8 +668,8 @@ func (e *Engine) Broadcaster() *Broadcaster { return e.bc }
 // 이 요약들은 node_id 를 달지 않는다. 그래서 한국어화해도 두뇌 입력(BRIEF 경계 #1)을
 // 건드리지 않는다. 포맷 인자(%d)는 원형 보존. [[G132]]
 const (
-	goallessTaskDoneSummary = "모든 목표를 달성했고 직접 투입한 의도의 실행도 끝나, 작업을 종료합니다"
-	plannerRoundSummaryFmt  = "%d차 계획 수립"
+	goallessTaskDoneSummary = "All goals have been achieved and the directly injected intents have finished running; ending the task"
+	plannerRoundSummaryFmt  = "Planning round %d"
 )
 
 func (e *Engine) emitActivity(t *Task, r db.Activity) db.Activity {
@@ -688,9 +688,9 @@ func (e *Engine) emitActivity(t *Task, r db.Activity) db.Activity {
 		if isFKViolation(err) {
 			storeID := t.Store.ID()
 			if exists, refs, maxID, dErr := e.m.pg.ExplorationDiag(storeID); dErr != nil {
-				diag = fmt.Sprintf(" | FK诊断查询失败(store.expID=%d task.ExpID=%d): %v", storeID, t.ExpID, dErr)
+				diag = fmt.Sprintf(" | FK diagnostic query failed (store.expID=%d task.ExpID=%d): %v", storeID, t.ExpID, dErr)
 			} else {
-				diag = fmt.Sprintf(" | FK诊断: store.expID=%d task.ExpID=%d exploration存在=%v 引用它的task数=%d MAX(exploration.id)=%d",
+				diag = fmt.Sprintf(" | FK diagnostic: store.expID=%d task.ExpID=%d exploration exists=%v tasks referencing it=%d MAX(exploration.id)=%d",
 					storeID, t.ExpID, exists, refs, maxID)
 			}
 		}

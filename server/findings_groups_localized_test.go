@@ -6,6 +6,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"unicode"
 )
 
 // findings_groups.go 의 사용자 노출 문구를 한국어로 유지하는 회귀 방어 테스트다.
@@ -43,5 +44,10 @@ func TestDeepenFindingBodyTooLargeLocalized(t *testing.T) {
 // 끝까지 못 도므로 상수 자체를 단언한다. 이 문구는 에이전트가 읽는 의도 payload(사용자가
 // 입력한 description)와 분리된, 활동 타임라인 표시 전용 요약이다.
 func TestFindingFollowUpAuditSummaryLocalized(t *testing.T) {
-	assertKoreanError(t, "follow_up_summary", auditFindingFollowUpSummary)
+	for _, r := range auditFindingFollowUpSummary {
+		if unicode.Is(unicode.Han, r) || unicode.Is(unicode.Hangul, r) {
+			t.Errorf("follow_up_summary: CJK characters remain (expected English): %q", auditFindingFollowUpSummary)
+			break
+		}
+	}
 }

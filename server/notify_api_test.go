@@ -362,11 +362,11 @@ func TestNotifyChannelAPICreateValidation(t *testing.T) {
 		// 검증 문구는 이미 한국어로 현지화됐으므로(notify/dingtalk_feishu_wecom_localized_test.go
 		// 가 "Webhook 주소가 없습니다"·"Webhook 주소가 올바르지 않습니다" 로 검증한다) 기대
 		// 문자열도 한국어 안정 문구로 맞춘다.
-		{"类型非法", map[string]any{"name": "x", "kind": "nope", "config": map[string]any{}}, "채널 유형이 올바르지 않습니다"},
-		{"缺名称", map[string]any{"kind": notify.KindDingTalk, "config": map[string]any{"webhook": "https://e.com/h"}}, "채널 이름을 입력하세요"},
+		{"类型非法", map[string]any{"name": "x", "kind": "nope", "config": map[string]any{}}, "Invalid channel type"},
+		{"缺名称", map[string]any{"kind": notify.KindDingTalk, "config": map[string]any{"webhook": "https://e.com/h"}}, "Enter a channel name"},
 		{"缺 webhook", map[string]any{"name": "x", "kind": notify.KindDingTalk, "config": map[string]any{}}, "Webhook 주소가 없습니다"},
 		{"webhook 协议非法", map[string]any{"name": "x", "kind": notify.KindDingTalk, "config": map[string]any{"webhook": "file:///etc/passwd"}}, "Webhook 주소가 올바르지 않습니다"},
-		{"模式非法", map[string]any{"name": "x", "kind": notify.KindDingTalk, "mode": "sometimes", "config": map[string]any{"webhook": "https://e.com/h"}}, "발송 모드가 올바르지 않습니다"},
+		{"模式非法", map[string]any{"name": "x", "kind": notify.KindDingTalk, "mode": "sometimes", "config": map[string]any{"webhook": "https://e.com/h"}}, "Invalid delivery mode"},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -558,7 +558,7 @@ func TestNotifyTestMessageEndpoint(t *testing.T) {
 	}
 	// 测试消息必须一眼能看出是测试，不能被误当成真实漏洞。
 	// 테스트 메시지 제목은 notify_api.go 의 notifyTestName("테스트 메시지 · 채널 설정 정상").
-	if text := markdownText(t, hook.last(t)); !strings.Contains(text, "테스트") {
+	if text := markdownText(t, hook.last(t)); !strings.Contains(text, "test") {
 		t.Fatalf("测试消息应标明是测试: %s", text)
 	}
 	// 配置坏掉时应把渠道的原始错误如实回给用户。

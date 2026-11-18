@@ -5,6 +5,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"unicode"
 )
 
 // TestAssetErrorConstantsLocalized pins that every user-facing writeErr literal
@@ -32,7 +33,12 @@ func TestTaskAssetProvenanceLocalized(t *testing.T) {
 		"taskAssetSourceTaskSummary": taskAssetSourceTaskSummary,
 	}
 	for label, msg := range cases {
-		assertKoreanError(t, label, msg)
+		for _, r := range msg {
+			if unicode.Is(unicode.Han, r) || unicode.Is(unicode.Hangul, r) {
+				t.Errorf("%s: CJK characters remain (expected English): %q", label, msg)
+				break
+			}
+		}
 	}
 }
 

@@ -24,13 +24,13 @@ import (
 // 프런트엔드(system/settings 의 update-card)가 progress.message·reason·writeErr
 // 본문을 그대로 렌더하므로 한국어로 둔다. 로그·중국어 주석은 Z2(로그 최하위)라 범위 밖.
 const (
-	updateMsgPreparing          = "준비 중…"
-	updateMsgFailed             = "업데이트 실패"
-	updateMsgStaged             = "새 버전이 준비되었습니다. 재시작 중…"
-	updateErrNotReleaseFmt      = "현재 버전 %q 은(는) 정식 릴리스 버전이 아니므로 원클릭 업데이트를 사용할 수 없습니다"
-	updateErrAlreadyLatestFmt   = "이미 최신 버전입니다 (%s)"
-	updateErrInProgress         = "이미 업데이트가 진행 중입니다"
-	updateErrRollbackInProgress = "업데이트가 진행 중이어서 롤백할 수 없습니다"
+	updateMsgPreparing          = "Preparing…"
+	updateMsgFailed             = "Update failed"
+	updateMsgStaged             = "New version is ready. Restarting…"
+	updateErrNotReleaseFmt      = "current version %q is not an official release, so one-click update is unavailable"
+	updateErrAlreadyLatestFmt   = "already on the latest version (%s)"
+	updateErrInProgress         = "an update is already in progress"
+	updateErrRollbackInProgress = "cannot roll back while an update is in progress"
 )
 
 // restartCh 在升级就绪或回滚完成后关闭，main 收到后以 ExitRestart 退出。

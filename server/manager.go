@@ -337,7 +337,7 @@ func (m *Manager) Workers() int {
 // writeErr(400, err.Error()) 로 그대로 응답하며, 에이전트 도구(actool) 로 되먹이는 경로는
 // 없으므로 사용자 전용으로 보고 한국어로 유지한다. 용어는 UI 설정 화면(ko.json
 // settings.workers "워크 에이전트 수")과 맞춘다.
-const errWorkersPositive = "워크 에이전트 수는 1 이상이어야 합니다"
+const errWorkersPositive = "the number of work agents must be at least 1"
 
 // SetWorkers persists the concurrent work-agent count. Values <=0 are rejected.
 func (m *Manager) SetWorkers(n int) error {
@@ -396,7 +396,7 @@ func NewManager(dir, proxyAddr string) (*Manager, error) {
 					// fmt.Errorf("recover traffic delete staging: %w", err) 로 감싸 기동 실패로
 					// 전파할 뿐 writeErr·actool 어느 경로에도 닿지 않는 운영자 기동 로그라,
 					// F3b(사용자 노출 writeErr) 범위가 아니어서 원문을 보존한다(Z2 계열).
-					return false, errors.New("归档流量暂存日志缺少任务 ID")
+					return false, errors.New("archived traffic staging log is missing the task ID")
 				}
 				task, taskErr := pg.GetTask(taskID)
 				if taskErr != nil {

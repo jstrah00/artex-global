@@ -30,15 +30,15 @@ import (
 // (판정 프롬프트 본문)는 번역하지 않으며, [模型] 센티넬(decision_source 분류용 · UI 에서
 // 표시 전 제거 · db SQL LIKE·HasPrefix 소비처와 결합)도 원문 그대로 둔다.
 const (
-	msgReviewContextIncomplete = "검토 맥락이 완전하지 않아 사람의 확인이 필요합니다: "
-	msgModelApprovalFailed     = "모델 승인에 실패하여 실패 정책에 따라 처리합니다: "
-	msgModelOutputUnparsable   = "모델 출력을 해석할 수 없어 실패 정책에 따라 처리합니다"
-	msgToolApprovalRequestFmt  = "도구 %s 승인 요청 (#%d)"
-	reasonWorkCanceled         = "작업이 취소되었습니다"
-	reasonWorkCanceledPreExec  = "실행 전에 작업이 취소되었습니다"
-	reasonApprovalTimeout      = "승인 시간이 초과되어 시간 초과 정책에 따라 처리합니다"
-	reasonManualDeny           = "사람이 실행을 거부했습니다"
-	reasonManualAllow          = "사람이 실행을 허용했습니다"
+	msgReviewContextIncomplete = "The review context is incomplete, so human confirmation is required: "
+	msgModelApprovalFailed     = "Model approval failed; handling it per the failure policy: "
+	msgModelOutputUnparsable   = "The model output could not be parsed; handling it per the failure policy"
+	msgToolApprovalRequestFmt  = "Tool %s approval request (#%d)"
+	reasonWorkCanceled         = "The task was canceled"
+	reasonWorkCanceledPreExec  = "The task was canceled before execution"
+	reasonApprovalTimeout      = "Approval timed out; handling it per the timeout policy"
+	reasonManualDeny           = "A human denied execution"
+	reasonManualAllow          = "A human allowed execution"
 )
 
 // ctxKey is the unexported context key type to avoid collisions.
@@ -579,9 +579,9 @@ func ruleMatches(r compiledRule, toolName string, input []byte) bool {
 func defaultMessage(action, name string) string {
 	switch action {
 	case "deny":
-		return "가로채기 규칙 [" + name + "] 에 따라 이 도구를 실행할 수 없습니다"
+		return "This tool cannot be executed under intercept rule [" + name + "]"
 	case "ask":
-		return "가로채기 규칙 [" + name + "] 에 따라 사용자 승인이 필요합니다. 잠시 기다려 주세요"
+		return "User approval is required under intercept rule [" + name + "]. Please wait a moment"
 	default:
 		return ""
 	}
@@ -694,7 +694,7 @@ func (i *Interceptor) HandleAsk(ctx context.Context, convID int64, dec Decision,
 	}
 }
 
-var ErrAlreadyDecided = errors.New("이미 처리되었거나 존재하지 않는 승인입니다. 기록을 새로 고쳐 주세요")
+var ErrAlreadyDecided = errors.New("this approval has already been processed or does not exist. Please refresh the record")
 
 // Decide resolves a pending request. Called by the HTTP decide endpoint.
 func (i *Interceptor) Decide(pendingID int64, allowed bool) error {

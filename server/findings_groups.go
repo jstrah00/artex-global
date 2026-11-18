@@ -16,7 +16,7 @@ const maxFindingFollowUpRunes = 4000
 
 // auditFindingFollowUpSummary 는 사용자가 취약점을 심화 익스플로잇하려고 후속 의도를
 // 제출할 때 활동 타임라인에 남는 요약 문구다("{요약} #{의도ID}" 형태로 표시된다).
-const auditFindingFollowUpSummary = "사용자가 제출한 취약점 심화 익스플로잇 의도"
+const auditFindingFollowUpSummary = "User-submitted intent to further exploit the vulnerability"
 
 func findingPaginationParam(raw string, fallback, upperBound int) int {
 	value := atoiDefault(raw, fallback)
